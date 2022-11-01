@@ -1,0 +1,69 @@
+---
+title: "Methylation Proc"
+output: html_document
+date: "2022-09-07"
+---
+
+
+```{r}
+library(dplyr)
+library(sesame)
+library(snow)
+library(stats)
+library(RSQLite)
+library(BiocParallel)
+```
+
+## Data IO 
+```{r}
+idat_dir_adni <- "/Users/sreepada/Library/CloudStorage/Box-Box/DataRepository/ADNI/Methylation/ADNI_iDAT_files/"
+# idat_dir_abc <- "/Users/sreepada/Library/CloudStorage/Box-Box/DataRepository/ADNI/Methylation/"
+bpparam <- SnowParam(2)
+```
+
+## Betas
+```{r}
+betas <- openSesame(idat_dir, func = getBetas, BPPARAM = bpparam)
+```
+
+## Signal Intensities and Allele Frequencies
+```{r}
+sdfs <- openSesame(idat_dir, func = NULL, BPPARAM = bpparam)
+
+```
+
+## Searching IDAT prefixes
+```{r}
+sdfs = list(lapply(searchIDATprefixes(idat_dir_adni), readIDATpair))
+```
+
+```{r}
+sdfs <- list(lapply(sdfs, openSesame, prep="QCDPB", func=NULL))
+```
+
+## QC Metrics
+```{r}
+qcs <- list(lapply(sdfs, openSesame, prep="", func=sesameQC_calcStats, funs="detection"))
+```
+
+## Allele Frequencies
+```{r}
+allele_freqs <- openSesame(idat_dir, func = getAFs)
+```
+
+
+
+## Write to table
+```{r}
+conn <- dbConnect(SQLite(), "adnim.db")
+dbWriteTable(conn, "betas", as.data.frame(betas)) # write betas
+```
+
+
+```{r}
+for (sdf in sdfs) {
+  getBetas(sdf[1])
+}
+```
+
+
