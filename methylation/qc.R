@@ -37,4 +37,5 @@ res <- Rtsne(pca$x,pca=F,max_iter=2500,theta=0,verbose=T)
 # Additional QCs
 idat_dir_adni <- "/Users/sreepada/Library/CloudStorage/Box-Box/DataRepository/ADNI/Methylation/ADNI_iDAT_files/"
 qcs_intensity <- openSesame(idat_dir_adni, prep="", func=sesameQC_calcStats, funs="intensity")
+adniQC_intensity <- do.call(rbind, lapply(qcs_intensity, as.data.frame))
 

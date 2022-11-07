@@ -1,0 +1,3 @@
+[submodule "CorticalClock"]
+	path = CorticalClock
+	url = https://github.com/gemmashireby/CorticalClock.git
