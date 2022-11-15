@@ -5,6 +5,7 @@ library(sesame)
 library(SummarizedExperiment)
 library(stats)
 library(smplot)
+library(ggplot2)
 
 # DATA IO
 # Read in data as SummarizedExperiment
@@ -20,19 +21,16 @@ betas <- assays(adni)[[1]]
 cpgs.missing <- checkClocks(betas)
 
 # Compute Horvath Age
-betas2 <- tibble::rownames_to_column(as.data.frame(betas),"ProbeID") # Get rownames (CpGs) as first column, Horvath format
-betasHorvath <- subset(betas2,ProbeID %in% coefHorvath$CpGmarker) # subset betas matrix to only include Horvath CpGs
+betasHorvath <- tibble::rownames_to_column(as.data.frame(betas),"ProbeID") # Get rownames (CpGs) as first column, Horvath format
+betasHorvath <- subset(betasHorvath,ProbeID %in% coefHorvath$CpGmarker) # subset betas matrix to only include Horvath CpGs
 temp <- DNAmAge(betasHorvath,clocks=c("Horvath")) 
 adni$AgeHorvath <- temp$Horvath
-
+  
 # Compute Shireby CorticalAge
 clockDir <- "CorticalClock/PredCorticalAge/"
-source(path(clockDir, "CorticalClock.R"))
-CorticalClock(betas, as.data.frame(colData(adni)), clockDir, "barcodes", "Age")
+source(paste0(clockDir,"RunCorticalClock.R"))
 
-# Plotting
-ggplot(as.data.frame(colData(adni)), aes(x=Age, y=AgeHorvath, color=as.factor(DX1))) +
-  geom_point() +
-  geom_smooth(aes(color=as.factor(DX1)),method="lm") +
-  geom_abline(slope = 1, intercept = 0) + 
-  sm_corr_theme()
+coefCortical <- read.table(paste0(clockDir,"CorticalClockCoefs.txt",sep=""),stringsAsFactor=F,header=T)
+betasCortical <- betas[rownames(betas) %in% coefCortical$probe,]
+RunCorticalClock(betasCortical, as.data.frame(colData(adni)), clockDir, "barcodes", "Age",resultsdir = 'data/ADNI/',outfile = "AgeCortical")
+
