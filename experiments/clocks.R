@@ -6,6 +6,7 @@ library(SummarizedExperiment)
 library(stats)
 library(smplot)
 library(ggplot2)
+library(lubridate)
 
 # DATA IO
 # Read in data as SummarizedExperiment
@@ -31,6 +32,11 @@ clockDir <- "CorticalClock/PredCorticalAge/"
 source(paste0(clockDir,"RunCorticalClock.R"))
 
 coefCortical <- read.table(paste0(clockDir,"CorticalClockCoefs.txt",sep=""),stringsAsFactor=F,header=T)
-betasCortical <- betas[rownames(betas) %in% coefCortical$probe,]
-RunCorticalClock(betasCortical, as.data.frame(colData(adni)), clockDir, "barcodes", "Age",resultsdir = 'data/ADNI/',outfile = "AgeCortical")
+betasCortical <- as.data.frame(betas[rownames(betas) %in% coefCortical$probe,])
+RunCorticalClock(betasCortical, as.data.frame(colData(adni)), clockDir, "barcodes", "Age",resultsdir = 'data/ADNI/',outfile = "ADNI")
 
+corticalAge <- read.csv("data/ADNI/ADNI_CorticalPred.csv")
+adni$AgeCortical <- corticalAge$brainpred
+
+# Write coldata to csv for easy manipulation
+write.csv(colData(adni),'data/ADNI/ClocksAndImaging.csv')
